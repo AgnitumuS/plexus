@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>P2P music sharing & listening</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+</head>
+
+<body>
+
+    <div class="form-group">
+        <div class="col-sm-4">
+            <input type="text" class="form-control" id="roomname" placeholder="Room">
+            <br>
+            <button type="submit" class="btn btn-default" id="submitButton">Create/Enter</button>
+            <button type="submit" class="btn btn-primary" id="sendButton">Send</button>
+        </div>
+    </div>
+    <h2 id="room"></h2>
+
+    <script>window.$ = window.jQuery = require('./js/jquery-2.2.1.min.js');</script>
+    <script src="js/pouchdb-5.2.1.min.js"></script>
+    <script src="js/simplepeer.min.js"></script>
+    <script src="js/socket.io.js"></script>
+    <script src="js/client.js"></script>
+</body>
+
+</html>

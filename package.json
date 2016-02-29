@@ -1,0 +1,21 @@
+{
+  "name": "electron-quick-start",
+  "version": "1.0.0",
+  "description": "plexus app",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron main.js"
+  },
+  "devDependencies": {
+    "electron-prebuilt": "^0.36.0",
+    "gulp": "^3.9.1"
+  },
+  "dependencies": {
+    "express": "^4.13.4",
+    "gulp-concat": "^2.6.0",
+    "node-static": "^0.7.7",
+    "pouchdb": "^5.2.1",
+    "random-word-by-length": "^0.1.0",
+    "simple-peer": "^6.0.1"
+  }
+}
