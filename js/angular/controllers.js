@@ -7,7 +7,9 @@ var db = new PouchDB('http://localhost:5984/sdps')
 /*node.js modules*/
 var fs = require('fs')
 var randomWord = require('random-word-by-length')
+var chunkit = require('chunkit')
 
+var chunkSize = 1024 * 10
 
 plexusControllers.controller('createRoomCtrl', ['$scope', function ($scope) {
 
@@ -35,17 +37,17 @@ plexusControllers.controller('createRoomCtrl', ['$scope', function ($scope) {
 
     peer.on('connect', function () {
         console.log('CONNECT')
-        fs.readFile('cover.jpg', (err, filecontent) => {
 
-            var fileName = 'cover_copy.jpg'
+        var fStream = fs.createReadStream(__dirname + '/05 - Beginning Again.mp3');
+        var chunkStream = new chunkit(fStream, { bytes: chunkSize }, function (err, chunk) {
+            if (err) return console.error('Error: ', err)
+	
+            if (chunk.data) {
+                const buf = new Buffer(JSON.stringify(chunk.data))
+                peer.send(buf)
+            }
 
-            if (err) throw err
-            var info = { fileName: fileName, fileContent: filecontent }
-            const buf = new Buffer(JSON.stringify(info))
-
-            peer.send(buf)
-            console.log('sending...')
-        })
+        })       
     })
 
     peer.on('data', function (data) {
@@ -55,7 +57,6 @@ plexusControllers.controller('createRoomCtrl', ['$scope', function ($scope) {
 
 
     socket.on('pair', function (info) {
-        console.log(info)
         db.get(room).then(function (doc) {
             if (doc.answer) {
                 peer.signal(JSON.parse(doc.answer))
@@ -88,7 +89,9 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
         initiator: false,
         trickle: false
     })
-
+    var writeableStreamName = 'stream' + getTimestamp() + '.txt'
+    var writeableStream = fs.createWriteStream(writeableStreamName)
+    
     /* Simple-Peer events START */
     peer.on('error', function (err) {
         console.log('error', err)
@@ -101,24 +104,46 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
     })
 
     peer.on('data', function (data) {
-        const buf = new Buffer(data)
-        console.log('Data captured, its length is: ' + data.length)
+        const chunk = new Buffer(data)
+        var buffered = JSON.parse(chunk.toString())
 
-        var dataObject = JSON.parse(buf.toString())
+        var dataBuffer = new Buffer(buffered.data)
+        console.log(dataBuffer.length)
 
-        var fileName = dataObject.fileName
-        var fileContent = JSON.stringify(dataObject.fileContent)
+        writeableStream.write(dataBuffer)
 
-        const content = JSON.parse(fileContent, (key, value) => {
-            return value && value.type === 'Buffer' ? new Buffer(value.data) : value
-        })
-
-        fs.appendFile(fileName, content, (err) => {
-            if (err) throw err
-            console.log('It\'s saved!')
-        })
+        if (dataBuffer.length != chunkSize) {
+            writeableStream.end()
+            console.log('file is downloaded')
+        }
     })
     /* Simple-Peer events END */
+
+//     writeableStream.on('finish', () => {
+//         console.log('it is just ended')
+// 
+//         fs.readFile(writeableStreamName, (err, data) => {
+//             if (err) throw err
+// 
+//             var dataObject = JSON.parse(data.toString())
+// 
+//             console.log(dataObject)
+// 
+//             var fileName = dataObject.fileName
+//             var fileContent = JSON.stringify(dataObject.fileContent)
+// 
+//             const content = JSON.parse(fileContent, (key, value) => {
+//                 return value && value.type === 'Buffer' ? new Buffer(value.data) : value
+//             })
+// 
+//             fs.writeFile(fileName, content, (err) => {
+//                 if (err) throw err
+//                 console.log('It\'s saved!')
+//             })
+// 
+//         })
+// 
+//     })
 
     $scope.joinRoom = function () {
         roomName = $scope.roomName
@@ -135,4 +160,9 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
         }
         socket.emit('create or join', info)
     }
+
+    function getTimestamp() {
+        return Math.floor(Date.now() / 1000)
+    }
+
 }])
