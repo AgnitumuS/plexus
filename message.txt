@@ -1,0 +1,7 @@
+/*old one*/
+This is the new message file!
+
+Bye guys.
+//ends here
+
+2

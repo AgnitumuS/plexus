@@ -1,7 +1,18 @@
-<a href="#/">
-    <button type="button" class="btn btn-default" id="joinRoomBtn">back</button>
-</a>
+<div ng-controller="joinRoomCtrl">
 
-<h1>Never settle...</h1>
+    <a href="#/">
+        <button type="button" class="btn btn-default" id="joinRoomBtn">back</button>
+    </a>
+    
+    </br> </br>
 
-<script src="../js/client.js"></script>
+    <div class="input-group">
+        <input type="text" class="form-control" placeholder="Room name" ng-model="roomName">
+    </div>
+
+    </br>
+
+    <button type="button" class="btn btn-info" ng-click="joinRoom()">Join</button>
+</div>
+
+<!--<script src="../js/client.js"></script>-->
