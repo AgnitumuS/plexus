@@ -10,11 +10,14 @@
     "electron-prebuilt": "^0.36.0"
   },
   "dependencies": {
+    "audio-metadata": "^0.3.0",
     "chunkit": "0.0.5",
     "express": "^4.13.4",
     "node-static": "^0.7.7",
+    "play-audio": "^0.1.0",
     "pouchdb": "^5.2.1",
     "random-word-by-length": "^0.1.0",
+    "rename": "^1.0.3",
     "simple-peer": "^6.0.1",
     "socket.io": "^1.4.5"
   }

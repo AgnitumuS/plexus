@@ -1,14 +1,28 @@
 <div ng-controller="createRoomCtrl">
+    <md-toolbar id="menubar">
+        <div class="md-toolbar-tools">
+            <a href="#/">
+                <md-button aria-label="Go Back">
+                    Go Back
+                </md-button>
+            </a>
+            <h2>
+            <span>plexus</span>
+        </h2>
+            <span flex></span>
+        </div>
+    </md-toolbar>
 
-    <a href="#/">
-        <button type="button" class="btn btn-default" id="joinRoomBtn">back</button>
-    </a>
+    <span ng-hide="roomNameProgressLine">
+        <md-progress-linear md-mode="indeterminate"></md-progress-linear>
+    </span>
 
-    <h1>Create a room, Bro!</h1>
-    
-    <h2>{{roomName}}</h2>   
-
-    <!--<button type="button" class="btn btn-primary" id="joinRoomBtn" ng-click="createroom()">Create</button>-->
-    <!--<button type="button" class="btn btn-primary" id="joinRoomBtn" ng-click="connect()">Connect</button>-->
+    <md-card ng-hide="roomNameCard">
+        <md-card-title>
+            <md-card-title-text>
+                <span class="md-headline">Room name generated: {{roomName}}</span>
+            </md-card-title-text>
+        </md-card-title>
+    </md-card>
 
 </div>

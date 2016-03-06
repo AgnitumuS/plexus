@@ -8,8 +8,31 @@ var db = new PouchDB('http://localhost:5984/sdps')
 var fs = require('fs')
 var randomWord = require('random-word-by-length')
 var chunkit = require('chunkit')
+var play = require('play-audio')
 
 var chunkSize = 1024 * 10
+
+plexusControllers.controller('mainCtrl', ['$scope', function ($scope) {
+
+    $scope.songInfo = true
+    $scope.playing = false
+
+    $scope.songName = "Beginning Again"
+    $scope.artistName = "John Frusciante"
+
+    $scope.playSong = function () {
+        var p = play('05 - Beginning Again.mp3')
+
+        if (!$scope.playing) {
+            $scope.playing = true
+            $scope.songInfo = false
+            p.play()
+                .controls()
+                .volume(0.3)
+        }
+    }
+
+}])
 
 plexusControllers.controller('createRoomCtrl', ['$scope', function ($scope) {
 
@@ -20,6 +43,9 @@ plexusControllers.controller('createRoomCtrl', ['$scope', function ($scope) {
         initiator: true,
         trickle: false
     })
+
+    $scope.roomNameProgressLine = false
+    $scope.roomNameCard = true
 
     /* Simple-Peer events START */
     peer.on('error', function (err) {
@@ -32,22 +58,30 @@ plexusControllers.controller('createRoomCtrl', ['$scope', function ($scope) {
         createRoom(room)
         $scope.$apply(function () {
             $scope.roomName = room
+            $scope.roomNameProgressLine = true
+            $scope.roomNameCard = false
         });
     })
 
     peer.on('connect', function () {
         console.log('CONNECT')
 
-        var fStream = fs.createReadStream(__dirname + '/05 - Beginning Again.mp3');
+        var filename = '/05 - Beginning Again.mp3'
+
+        var fileInfo = { song: filename }
+        const buf = new Buffer(JSON.stringify(fileInfo))
+        peer.send(buf)
+
+        var fStream = fs.createReadStream(__dirname + filename);
         var chunkStream = new chunkit(fStream, { bytes: chunkSize }, function (err, chunk) {
             if (err) return console.error('Error: ', err)
-	
+
             if (chunk.data) {
                 const buf = new Buffer(JSON.stringify(chunk.data))
                 peer.send(buf)
             }
 
-        })       
+        })
     })
 
     peer.on('data', function (data) {
@@ -85,6 +119,7 @@ plexusControllers.controller('createRoomCtrl', ['$scope', function ($scope) {
 plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
 
     var roomName = ''
+    var songName = ''
     var peer = new window.SimplePeer({
         initiator: false,
         trickle: false
@@ -107,43 +142,22 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
         const chunk = new Buffer(data)
         var buffered = JSON.parse(chunk.toString())
 
-        var dataBuffer = new Buffer(buffered.data)
-        console.log(dataBuffer.length)
+        if (buffered.song) {
+            songName = buffered.song
+            console.log(songName)
+        }
+        else {
+            var dataBuffer = new Buffer(buffered.data)
 
-        writeableStream.write(dataBuffer)
+            writeableStream.write(dataBuffer)
 
-        if (dataBuffer.length != chunkSize) {
-            writeableStream.end()
-            console.log('file is downloaded')
+            if (dataBuffer.length != chunkSize) {
+                writeableStream.end()
+                console.log('file is downloaded. ')
+            }
         }
     })
     /* Simple-Peer events END */
-
-//     writeableStream.on('finish', () => {
-//         console.log('it is just ended')
-// 
-//         fs.readFile(writeableStreamName, (err, data) => {
-//             if (err) throw err
-// 
-//             var dataObject = JSON.parse(data.toString())
-// 
-//             console.log(dataObject)
-// 
-//             var fileName = dataObject.fileName
-//             var fileContent = JSON.stringify(dataObject.fileContent)
-// 
-//             const content = JSON.parse(fileContent, (key, value) => {
-//                 return value && value.type === 'Buffer' ? new Buffer(value.data) : value
-//             })
-// 
-//             fs.writeFile(fileName, content, (err) => {
-//                 if (err) throw err
-//                 console.log('It\'s saved!')
-//             })
-// 
-//         })
-// 
-//     })
 
     $scope.joinRoom = function () {
         roomName = $scope.roomName
