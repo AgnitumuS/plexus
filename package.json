@@ -1,22 +1,21 @@
 {
-  "name": "electron-quick-start",
+  "name": "Plexus",
   "version": "1.0.0",
-  "description": "plexus app",
+  "description": "P2P music listening",
   "main": "main.js",
   "scripts": {
     "start": "electron main.js"
   },
   "devDependencies": {
-    "electron-prebuilt": "^0.36.0",
-    "gulp": "^3.9.1"
+    "electron-prebuilt": "^0.36.0"
   },
   "dependencies": {
     "chunkit": "0.0.5",
     "express": "^4.13.4",
-    "gulp-concat": "^2.6.0",
     "node-static": "^0.7.7",
     "pouchdb": "^5.2.1",
     "random-word-by-length": "^0.1.0",
-    "simple-peer": "^6.0.1"
+    "simple-peer": "^6.0.1",
+    "socket.io": "^1.4.5"
   }
 }
