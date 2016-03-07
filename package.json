@@ -13,6 +13,7 @@
     "audio-metadata": "^0.3.0",
     "chunkit": "0.0.5",
     "express": "^4.13.4",
+    "mkdirp": "^0.5.1",
     "node-static": "^0.7.7",
     "play-audio": "^0.1.0",
     "pouchdb": "^5.2.1",

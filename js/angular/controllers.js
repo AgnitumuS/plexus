@@ -9,6 +9,7 @@ var fs = require('fs')
 var randomWord = require('random-word-by-length')
 var chunkit = require('chunkit')
 var play = require('play-audio')
+var mkdirp = require('mkdirp')
 
 var chunkSize = 1024 * 10
 
@@ -125,6 +126,8 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
     })
     var writeableStream = null
     
+    $scope.connectToPeerProgressLine = true
+    
     /* Simple-Peer events START */
     peer.on('error', function (err) {
         console.log('error', err)
@@ -136,15 +139,13 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
         joinRoom(sdp)
     })
 
-    peer.on('data', function (data) {
+    peer.on('data', function (data) {        
         const chunk = new Buffer(data)
         var buffered = JSON.parse(chunk.toString())
 
         if (buffered.song) {
-            var writeableStreamName = buffered.song
-            writeableStream = fs.createWriteStream(writeableStreamName)
-            
-            console.log(buffered.song)
+            $scope.connectToPeerProgressLine = false
+            saveSong(buffered.song);
         }
         else {
             var dataBuffer = new Buffer(buffered.data)
@@ -152,6 +153,7 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
             writeableStream.write(dataBuffer)
 
             if (dataBuffer.length != chunkSize) {
+                $scope.connectToPeerProgressLine = true
                 writeableStream.end()
                 console.log('file is downloaded. ')
             }
@@ -161,7 +163,6 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
 
     $scope.joinRoom = function () {
         roomName = $scope.roomName
-        console.log(roomName)
         db.get(roomName).then(function (doc) {
             peer.signal(JSON.parse(doc.offer))
         })
@@ -175,8 +176,25 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
         socket.emit('create or join', info)
     }
 
-    function getTimestamp() {
-        return Math.floor(Date.now() / 1000)
+    function saveSong(songName) {
+
+        var folderToSave = __dirname + '/downloaded/'
+
+        fs.access(folderToSave, fs.F_OK, function (err) {
+            //if folder does not exist then create it!
+            if (err) {
+                mkdirp(folderToSave, function (err) {
+                    createWriteableStream(folderToSave, songName)
+                })
+            } else {
+                createWriteableStream(folderToSave, songName)
+            }
+        })
+    }
+
+    function createWriteableStream(folderToSave, songName) {
+        var writeableStreamName = folderToSave + songName
+        writeableStream = fs.createWriteStream(writeableStreamName)
     }
 
 }])
