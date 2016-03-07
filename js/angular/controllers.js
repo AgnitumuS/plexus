@@ -68,7 +68,7 @@ plexusControllers.controller('createRoomCtrl', ['$scope', function ($scope) {
 
         var filename = '/05 - Beginning Again.mp3'
 
-        var fileInfo = { song: filename }
+        var fileInfo = { song: 'Beginning Again_copy.mp3' }
         const buf = new Buffer(JSON.stringify(fileInfo))
         peer.send(buf)
 
@@ -119,13 +119,11 @@ plexusControllers.controller('createRoomCtrl', ['$scope', function ($scope) {
 plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
 
     var roomName = ''
-    var songName = ''
     var peer = new window.SimplePeer({
         initiator: false,
         trickle: false
     })
-    var writeableStreamName = 'stream' + getTimestamp() + '.txt'
-    var writeableStream = fs.createWriteStream(writeableStreamName)
+    var writeableStream = null
     
     /* Simple-Peer events START */
     peer.on('error', function (err) {
@@ -143,8 +141,10 @@ plexusControllers.controller('joinRoomCtrl', ['$scope', function ($scope) {
         var buffered = JSON.parse(chunk.toString())
 
         if (buffered.song) {
-            songName = buffered.song
-            console.log(songName)
+            var writeableStreamName = buffered.song
+            writeableStream = fs.createWriteStream(writeableStreamName)
+            
+            console.log(buffered.song)
         }
         else {
             var dataBuffer = new Buffer(buffered.data)
