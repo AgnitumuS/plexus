@@ -5,13 +5,11 @@
                 <span>plexus</span>
             </h2>
 
-            <md-button id="player" class="md-fab md-mini md-primary" aria-label="Play" ng-click="playSong()">
+            <!--<md-button id="player" class="md-fab md-mini md-primary" aria-label="Play" ng-click="playSong()">
                 <md-icon md-svg-src="img/icons/ic_play_arrow_24px.svg"></md-icon>
-            </md-button>
+            </md-button>-->
 
-
-            <span ng-hide="songInfo">{{songName}} by {{artistName}}</span>
-
+            <span class="my-player"></span>
 
             <span flex></span>
 
@@ -52,4 +50,34 @@
 
         </div>
     </md-toolbar>
+
+    <!--main content-->
+
+    <div class="container-fluid" id="musicContainer">
+        <div class="row">
+            <div class="col-md-3 col-sm-4">
+                <md-card>
+                    <img ng-src="{{imagePath}}" class="md-card-image" alt="Washed Out">
+                    <md-card-title>
+                        <md-card-title-text>
+                            <span class="md-headline">The Empyrean</span>
+                            <span class="md-subheader">John Frusciante</span>
+                        </md-card-title-text>
+                    </md-card-title>
+                    <md-card-content>
+                        {{songName}}
+                        <ul>
+                            <li ng-repeat="song in songs">{{song.name}}</li>
+                        </ul>
+                    </md-card-content>
+                    <md-card-actions layout="row" layout-align="end center">
+                        <md-button>Play</md-button>
+                        <md-button>Share</md-button>
+                    </md-card-actions>
+                </md-card>
+            </div>
+        </div>
+    </div>
+
+
 </div>

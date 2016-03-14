@@ -6,6 +6,18 @@ body{
     background-color: #26C6DA;
 }
 
+#musicContainer{
+    background-color: #B2DFDB;
+}
+
 #joinRoomDiv{
     margin: 3%;
 }
+
+
+.my-player{
+    margin-top: 1%;
+    margin-left: 2%;
+}
+
+audio { width: 300px; }

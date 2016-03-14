@@ -11,7 +11,6 @@
 <body ng-app="PlexusApp">
 
     <div ng-view>
-        
     </div>
 
     <!-- Angular Material requires Angular.js Libraries -->
@@ -23,16 +22,23 @@
 
     <!-- Angular Material Library -->
     <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.js"></script>
-    
+
     <!--libraries-->
-    <script src="js/simplepeer.min.js"></script>
-    <script src="js/socket.io.js"></script>
-    <script src="js/pouchdb-5.2.1.min.js"></script>
-    <script>window.$ = window.jQuery = require('./js/jquery-2.2.1.min.js');</script>
-    
-    
-    <script src="js/angular/app.js"></script>
-    <script src="js/angular/controllers.js"></script>     
+    <script src="js/libs/simplepeer.min.js"></script>
+    <script src="js/libs/socket.io.js"></script>
+    <script src="js/libs/pouchdb-5.2.1.min.js"></script>
+    <script>
+        window.$ = window.jQuery = require('./js/libs/jquery-2.2.1.min.js');
+    </script>
+
+
+    <script src="js/src/app.js"></script>
+    <script src="js/src/controllers.js"></script>
+
+    <!--angualr controllers-->
+    <script src="js/src/controllers/mainCtrl.js"></script>
+    <script src="js/src/controllers/joinRoomCtrl.js"></script>
+    <script src="js/src/controllers/createRoomCtrl.js"></script>
 
 </body>
 
