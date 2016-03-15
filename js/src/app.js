@@ -12,5 +12,3 @@ angular.module('PlexusApp', ['ngMaterial', 'ngRoute', 'plexusControllers'])
                 templateUrl: 'partials/main.html'
             })
     }])
-
-
