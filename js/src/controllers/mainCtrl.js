@@ -47,6 +47,9 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             readSongsInfoIntoDb()
         })
 
+        //this is for the test
+        //readSongsInfoIntoDb()
+
     })
 
     function readSongsInfoIntoDb() {
@@ -60,60 +63,65 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
 
         var musicRoot = folderContents(options)
         var musicRootFolder = musicRoot[".folders"]
+
         musicRootFolder.forEach(function(folder) {
 
             var actualMusicFolder = musicFolder + "/" + folder
             var albumFolderOptions = {
                 "path": actualMusicFolder,
+                "recursively": true,
                 "filter": {
                     "extensionAccept": ["mp3", "flac"]
                 }
             }
-            var albumFolder = folderContents(albumFolderOptions)
-            //depth-1 (TODO depth-n recursively)
-            if (albumFolder[".files"]) {
-                var songs = albumFolder[".files"]
+            var actualMusicFolderContent = folderContents(albumFolderOptions)
+            var groupedFolder = _.groupBy(actualMusicFolderContent, 'path')
+            readSubFolder(groupedFolder, saveAlbumInfo)
+            console.log("--continue reading--")
+        })
+    }
 
-                readSongInfo(songs, saveAlbumInfo)
+    function readSubFolder(folder, callback) {
+        //iterate on each subfolder
+        for (property in folder) {
+            var pathToSubfolder = property
 
-            }
+            //iterate on each song in the subfodler
+            var tracks = folder[pathToSubfolder]
+
+            readFolderMetadata(tracks, pathToSubfolder, callback)
+        }
+    }
+
+    function readFolderMetadata(tracks, pathToSubfolder, callback) {
+        var album = ""
+        var artist = []
+        var songTitles = []
+        tracks.forEach(function(element, index) {
+            var songPath = pathToSubfolder + "/" + element.name + "." + element.ext
+            var parser = mm(fs.createReadStream(songPath), function(err, metadata) {
+                if (err) throw err
+
+                artist.push(_.toString(metadata.artist))
+                songTitles.push(metadata.title)
+
+                if (tracks.length === index + 1) {
+                    album = metadata.album
+                    callback(album, artist, songTitles)
+                }
+                console.log("###" + metadata.album + " / " + metadata.title + " read")
+            })
         })
     }
 
     function saveAlbumInfo(album, artist, songTitles) {
         var albumInfo = {
-            _id: "album" + getRandomNumber(10000, 99999),
+            _id: _.uniqueId('album_'),
             album: album,
-            artist: artist,
+            artist: _.uniq(artist),
             songs: songTitles
         }
         clientDB.put(albumInfo)
-    }
-
-    function readSongInfo(songs, callback) {
-        var album = ""
-        var artist = []
-        var songTitles = []
-        songs.forEach(function(song, index) {
-            var pathToMp3 = song.path + "/" + song.name + "." + song.ext
-            var parser = mm(fs.createReadStream(pathToMp3), function(err, metadata) {
-                if (err) throw err
-                if (index === 0) {
-                    album = metadata.album
-                    artist = metadata.artist
-                }
-                songTitles.push(metadata.title)
-
-                if (songs.length === index + 1) {
-                    callback(album, artist, songTitles)
-                }
-
-            })
-        })
-    }
-
-    function getRandomNumber(lower, higher) {
-        return Math.floor(Math.random() * higher) + lower
     }
 
 }])

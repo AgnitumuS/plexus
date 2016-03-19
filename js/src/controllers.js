@@ -15,6 +15,7 @@ var play = require('play-audio')
 var mkdirp = require('mkdirp')
 var folderContents = require('folder-contents')
 var mm = require('musicmetadata')
+var _ = require('lodash')
 
 // electron
 const ipcRenderer = require('electron').ipcRenderer
