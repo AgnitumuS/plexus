@@ -1,22 +1,12 @@
 angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog', function($scope, $mdDialog) {
 
-    // request.onerror = function(event) {
-    //     alert("Database error: " + event.target.errorCode);
-    // }
-
-    // request.onsuccess = function(event) {
-    //     indexedDB = event.target.result
-    //     console.log("indexedDB is open")
-    // }
-
     $scope.imagePath = 'http://www.navidspage.com/wp-content/uploads/2009/01/theempyrean.jpg'
 
     $scope.songInfo = false
     $scope.playing = false
 
-
     var parent = document.querySelector('.my-player')
-    var p = play('05 - Beginning Again.mp3', parent).controls()
+    var p
 
     p.on('play', function() {
         console.log('playing')
@@ -26,12 +16,10 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         console.log('not playing')
     })
 
-    $scope.playSong = function() {
-
-        var songs = folderContents(options)
-        $scope.songs = songs[".files"]
-        console.log($scope.songs)
-
+    $scope.playSong = function(event) {
+        
+        p = play(event.target.id, parent).autoplay()
+        
     }
 
     //page loaded
@@ -50,7 +38,24 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         //this is for the test
         //readSongsInfoIntoDb()
 
+        readAlbumsFromDb()
+
     })
+
+
+    function readAlbumsFromDb() {
+        clientDB.allDocs({
+            include_docs: true
+        })
+            .then(function(result) {
+                var albums = _.map(result.rows, 'doc')
+                $scope.albums = albums
+                $scope.$apply()
+            })
+            .catch(function(err) {
+                console.log(err)
+            })
+    }
 
     function readSongsInfoIntoDb() {
         var musicFolder = "d:/Marton/etc/MUSIC"
@@ -64,6 +69,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         var musicRoot = folderContents(options)
         var musicRootFolder = musicRoot[".folders"]
 
+        console.log('Start scanning...')
         musicRootFolder.forEach(function(folder) {
 
             var actualMusicFolder = musicFolder + "/" + folder
@@ -76,12 +82,11 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             }
             var actualMusicFolderContent = folderContents(albumFolderOptions)
             var groupedFolder = _.groupBy(actualMusicFolderContent, 'path')
-            readSubFolder(groupedFolder, saveAlbumInfo)
-            console.log("--continue reading--")
+            scanSubFolder(groupedFolder)
         })
     }
 
-    function readSubFolder(folder, callback) {
+    function scanSubFolder(folder) {
         //iterate on each subfolder
         for (property in folder) {
             var pathToSubfolder = property
@@ -89,39 +94,35 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             //iterate on each song in the subfodler
             var tracks = folder[pathToSubfolder]
 
-            readFolderMetadata(tracks, pathToSubfolder, callback)
+            readFolderMetadata(tracks, pathToSubfolder)
         }
+        console.log('Scanning is successfully finished.')
     }
 
-    function readFolderMetadata(tracks, pathToSubfolder, callback) {
+    function readFolderMetadata(tracks, pathToSubfolder) {
         var album = ""
         var artist = []
-        var songTitles = []
+        var songs = []
         tracks.forEach(function(element, index) {
             var songPath = pathToSubfolder + "/" + element.name + "." + element.ext
             var parser = mm(fs.createReadStream(songPath), function(err, metadata) {
                 if (err) throw err
 
                 artist.push(_.toString(metadata.artist))
-                songTitles.push(metadata.title)
+                songs.push({ title: metadata.title, no: metadata.track.no, path: songPath })
 
                 if (tracks.length === index + 1) {
-                    album = metadata.album
-                    callback(album, artist, songTitles)
+                    var albumInfo = {
+                        _id: _.uniqueId('album_'),
+                        album: metadata.album,
+                        artist: _.uniq(artist),
+                        songs: songs,
+                        path: pathToSubfolder
+                    }
+                    clientDB.put(albumInfo)
                 }
-                console.log("###" + metadata.album + " / " + metadata.title + " read")
             })
         })
-    }
-
-    function saveAlbumInfo(album, artist, songTitles) {
-        var albumInfo = {
-            _id: _.uniqueId('album_'),
-            album: album,
-            artist: _.uniq(artist),
-            songs: songTitles
-        }
-        clientDB.put(albumInfo)
     }
 
 }])

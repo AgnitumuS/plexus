@@ -1,21 +1,20 @@
-var plexusControllers = angular.module('plexusControllers', [])
+angular.module('plexusControllers', [])
 
 /*global things..*/
-var socket = io.connect('http://localhost:3001')
-var db = new PouchDB('http://localhost:5984/sdps')
-//var request = indexedDB.open("music")
-//var indexedDB
-var clientDB = new PouchDB('musicDB');
+const socket = io.connect('http://localhost:3001')
+const db = new PouchDB('http://localhost:5984/sdps')
+const clientDB = new PouchDB('musicDB');
 
 /*node.js modules*/
-var fs = require('fs')
-var randomWord = require('random-word-by-length')
-var chunkit = require('chunkit')
-var play = require('play-audio')
-var mkdirp = require('mkdirp')
-var folderContents = require('folder-contents')
-var mm = require('musicmetadata')
-var _ = require('lodash')
+const fs = require('fs')
+const randomWord = require('random-word-by-length')
+const chunkit = require('chunkit')
+const play = require('play-audio')
+const mkdirp = require('mkdirp')
+const folderContents = require('folder-contents')
+const mm = require('musicmetadata')
+const _ = require('lodash')
+const Player = require('player')
 
 // electron
 const ipcRenderer = require('electron').ipcRenderer

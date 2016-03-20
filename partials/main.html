@@ -27,21 +27,7 @@
                     <md-menu-item>
                         <md-button ng-click="">
                             <div layout="row" flex>
-                                <p flex>About</p>
-                            </div>
-                        </md-button>
-                    </md-menu-item>
-                    <md-menu-item>
-                        <md-button ng-click="">
-                            <div layout="row" flex>
-                                <p flex>Help</p>
-                            </div>
-                        </md-button>
-                    </md-menu-item>
-                    <md-menu-item>
-                        <md-button ng-click="">
-                            <div layout="row" flex>
-                                <p flex>Donate</p>
+                                <p flex>Change root folder</p>
                             </div>
                         </md-button>
                     </md-menu-item>
@@ -53,31 +39,39 @@
 
     <!--main content-->
 
-    <div class="container-fluid" id="musicContainer">
+    <div id="musicContainer">
         <div class="row">
-            <div class="col-md-3 col-sm-4">
+            <div class="col-lg-3 col-md-3 col-sm-4" ng-repeat="album in albums | orderBy: 'album'">
                 <md-card>
-                    <img ng-src="{{imagePath}}" class="md-card-image" alt="Washed Out">
+                    <img id="cover" ng-src="http://lorempixel.com/200/200/" class="md-card-image" alt="Washed Out">
                     <md-card-title>
                         <md-card-title-text>
-                            <span class="md-headline">The Empyrean</span>
-                            <span class="md-subheader">John Frusciante</span>
+                            <span class="md-headline">{{album.album}}</span>
+                            <span ng-repeat="artist in album.artist">
+                                    <ul class="list-inline">
+                                        <li>{{artist}}</li>
+                                     </ul>
+                                </span>
                         </md-card-title-text>
+                        <md-button class="md-fab md-primary" aria-label="Favorite">
+                            <md-icon md-svg-icon="img/icons/ic_play_arrow_24px.svg"></md-icon>
+                        </md-button>
                     </md-card-title>
                     <md-card-content>
-                        {{songName}}
-                        <ul>
-                            <li ng-repeat="song in songs">{{song.name}}</li>
-                        </ul>
+                        <md-list>
+                            <md-list-item class="md-2-line" ng-repeat="song in album.songs | orderBy: 'no'">
+                                <div class="md-list-item-text" class="md-avatar-icon">
+                                    <md-button class="md-icon-button md-accent" aria-label="Favorite">
+                                        <md-icon  md-svg-icon="img/icons/ic_play_arrow_24px.svg"></md-icon>
+                                    </md-button>
+                                    <a href="#" class="songTitle" id="{{song.path}}" ng-click="playSong($event)">{{ song.title }}</a>
+                                </div>
+                            </md-list-item>
+                        </md-list>
                     </md-card-content>
-                    <md-card-actions layout="row" layout-align="end center">
-                        <md-button>Play</md-button>
-                        <md-button>Share</md-button>
-                    </md-card-actions>
                 </md-card>
             </div>
         </div>
     </div>
-
 
 </div>
