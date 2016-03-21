@@ -5,26 +5,48 @@ body{
 
 #menubar{
     background-color: #26C6DA;
+    position: fixed;
 }
 
 #musicContainer{
     background-color: #B2DFDB;
+    margin-left: 18%;
+    margin-top: 64px;  /*toolbar size*/
+    margin-bottom: 60px
 }
 
 #joinRoomDiv{
     margin: 3%;
 }
 
-
-.my-player{
-    margin-top: 1%;
-    margin-left: 2%;
-}
-
-audio { width: 300px; }
-
 .songTitle{
     color: #546E7A;
     padding: 0;
     margin: 0;
+}
+
+.margin-top-3{
+    margin-top: 3%;
+}
+
+.nomargin{
+    margin: 0;
+    padding:0;
+}
+
+.songInfo{
+    vertical-align: center;
+}
+
+#fixedFooter{
+    background-color: #546E7A;
+    width: 100%;
+    height: 60px;
+}
+
+#albumSideNav{
+    width: 18%;
+    position: fixed;
+    height: 80%;
+    margin-top: 64px; /*toolbar size*/
 }

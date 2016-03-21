@@ -5,22 +5,29 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
     $scope.songInfo = false
     $scope.playing = false
 
-    var parent = document.querySelector('.my-player')
-    var p
+    var p = play("05 - Beginning Again.mp3")
+
+    $scope.play = function() {
+
+    }
+
+    $scope.playSong = function(event) {
+        p.pause()
+        p = play(event.target.id).autoplay()
+    }
+
+
+    $scope.goToArtist = function(artist, event) {
+
+    }
 
     p.on('play', function() {
         console.log('playing')
     })
 
     p.on('pause', function() {
-        console.log('not playing')
+        console.log('pause')
     })
-
-    $scope.playSong = function(event) {
-        
-        p = play(event.target.id, parent).autoplay()
-        
-    }
 
     //page loaded
     angular.element(document).ready(function() {
@@ -50,6 +57,11 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             .then(function(result) {
                 var albums = _.map(result.rows, 'doc')
                 $scope.albums = albums
+                var arrayOfArtists = _.map(albums, 'artist')
+                var artists = _.flatten(arrayOfArtists)
+                var uniqArtists = _.uniq(artists)
+                var orderedArtists = _.orderBy(uniqArtists)
+                $scope.artists = orderedArtists
                 $scope.$apply()
             })
             .catch(function(err) {

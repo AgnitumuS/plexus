@@ -5,12 +5,6 @@
                 <span>plexus</span>
             </h2>
 
-            <!--<md-button id="player" class="md-fab md-mini md-primary" aria-label="Play" ng-click="playSong()">
-                <md-icon md-svg-src="img/icons/ic_play_arrow_24px.svg"></md-icon>
-            </md-button>-->
-
-            <span class="my-player"></span>
-
             <span flex></span>
 
             <a href="#/createroom">
@@ -31,6 +25,7 @@
                             </div>
                         </md-button>
                     </md-menu-item>
+
                 </md-menu-content>
             </md-menu>
 
@@ -39,39 +34,80 @@
 
     <!--main content-->
 
-    <div id="musicContainer">
-        <div class="row">
-            <div class="col-lg-3 col-md-3 col-sm-4" ng-repeat="album in albums | orderBy: 'album'">
-                <md-card>
-                    <img id="cover" ng-src="http://lorempixel.com/200/200/" class="md-card-image" alt="Washed Out">
-                    <md-card-title>
-                        <md-card-title-text>
-                            <span class="md-headline">{{album.album}}</span>
-                            <span ng-repeat="artist in album.artist">
-                                    <ul class="list-inline">
-                                        <li>{{artist}}</li>
-                                     </ul>
-                                </span>
-                        </md-card-title-text>
-                        <md-button class="md-fab md-primary" aria-label="Favorite">
-                            <md-icon md-svg-icon="img/icons/ic_play_arrow_24px.svg"></md-icon>
-                        </md-button>
-                    </md-card-title>
-                    <md-card-content>
-                        <md-list>
-                            <md-list-item class="md-2-line" ng-repeat="song in album.songs | orderBy: 'no'">
-                                <div class="md-list-item-text" class="md-avatar-icon">
-                                    <md-button class="md-icon-button md-accent" aria-label="Favorite">
-                                        <md-icon  md-svg-icon="img/icons/ic_play_arrow_24px.svg"></md-icon>
-                                    </md-button>
-                                    <a href="#" class="songTitle" id="{{song.path}}" ng-click="playSong($event)">{{ song.title }}</a>
-                                </div>
-                            </md-list-item>
-                        </md-list>
-                    </md-card-content>
-                </md-card>
+    <section layout="row" flex>
+
+        <md-sidenav class="md-sidenav-left" md-component-id="left" md-is-locked-open="$mdMedia('gt-sm')" md-disable-backdrop md-whiteframe="4"
+        id="albumSideNav">
+            <md-toolbar class="md-theme-indigo">
+                <h1 class="md-toolbar-tools">Artists</h1>
+            </md-toolbar>
+            <md-content>
+                <md-list>
+                    <md-list-item class="md-1-line" ng-repeat="artist in artists" ng-click="goToArtist(person.name, $event)" class="noright">
+                        <p>{{artist}}</p>
+                    </md-list-item>
+                </md-list>
+            </md-content>
+        </md-sidenav>
+
+        <md-content flex>
+            <div id="musicContainer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4 col-sm-4" ng-repeat="album in albums | orderBy: 'album'">
+                            <md-card>
+                                <md-card-title>
+                                    <md-card-title-text>
+                                        <span class="md-headline">{{album.album}}</span>
+                                        <span ng-repeat="artist in album.artist">
+                                            <p>{{artist}}</p>
+                                        </span>
+                                    </md-card-title-text>
+                                    <!--<md-button class="md-fab md-primary" aria-label="Favorite">
+                                        <md-icon md-svg-icon="img/icons/ic_play_arrow_24px.svg"></md-icon>
+                                    </md-button>-->
+                                </md-card-title>
+                                <md-card-content>
+                                    <md-list>
+                                        <md-list-item class="md-1-line" ng-repeat="song in album.songs | orderBy: 'no'">
+                                            <div class="md-list-item-text" class="md-avatar-icon">
+                                                <md-button class="md-icon-button md-accent" aria-label="Favorite">
+                                                    <md-icon md-svg-icon="img/icons/ic_play_arrow_24px.svg"></md-icon>
+                                                </md-button>
+                                                <a href="#" class="songTitle" id="{{song.path}}" ng-click="playSong($event)">{{ song.title }}</a>
+                                            </div>
+                                        </md-list-item>
+                                    </md-list>
+                                </md-card-content>
+                            </md-card>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </md-content>
+    </section>
+
+    <nav class="navbar navbar-default navbar-fixed-bottom" id="fixedFooter">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-1 col-sm-1">
+                    <md-button id="player" class="md-fab md-mini md-primary" aria-label="Play" ng-click="play()">
+                        <md-icon md-svg-src="img/icons/ic_play_arrow_24px.svg"></md-icon>
+                    </md-button>
+                </div>
+                <div class="col-md-11 col-sm-11">
+                    <h4>Before Your Very Eyes...</h4>
+                    <h5>Atoms For Peace</h5>
+                </div>
+                <!--<div class="col-md-6 col-sm-6">
+                    <div class="progress margin-top-3">
+                        <div class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0"
+                        aria-valuemax="100" style="width: 20%">
+                        </div>
+                    </div>
+                </div>-->
             </div>
         </div>
-    </div>
+    </nav>
 
 </div>

@@ -14,7 +14,6 @@ const mkdirp = require('mkdirp')
 const folderContents = require('folder-contents')
 const mm = require('musicmetadata')
 const _ = require('lodash')
-const Player = require('player')
 
 // electron
 const ipcRenderer = require('electron').ipcRenderer
