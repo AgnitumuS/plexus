@@ -1,5 +1,11 @@
 angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog', function($scope, $mdDialog) {
 
+    var allAlbumCount = 0
+    var currentAlbumCount = 0
+
+    $scope.mainContent = true
+    $scope.loading = false
+
     var p = play("05 - Beginning Again.mp3")
 
     //Play controller
@@ -17,13 +23,6 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
     }
 
     $scope.showLog = function() {
-        clientDB.allDocs({
-            include_docs: true
-        }).then(function(result) {
-            console.log(result)
-        }).catch(function(err) {
-            console.log(err);
-        })
     }
 
     p.on('play', function() {
@@ -39,17 +38,20 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
 
         if (localStorage.getItem("musicDir") === null) {
             ipcRenderer.send('getMusicDir', 'ping')
+        } else {
+            readMusicDataFromDb()
+            showMainContent()
         }
 
         ipcRenderer.on('musicDirMessage', function(event, arg) {
             localStorage.setItem("musicDir", arg)
+            allAlbumCount = 0
+            currentAlbumCount = 0
             scanMusicFolder()
         })
 
         //this is for the test
         //readSongsInfoIntoDb()
-
-        readMusicDataFromDb()
     })
 
     //It returns all the albums from the DB
@@ -69,6 +71,9 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
     function processInfoFromDb(resultFromDb) {
         var albums = processAlbumInfo(resultFromDb)
         processArtistInfo(albums)
+        if ($scope.mainContent && !$scope.loading) {
+            showMainContent()
+        }
     }
 
     function processAlbumInfo(resultFromDb) {
@@ -121,6 +126,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         //iterate on each subfolder
         for (property in folder) {
             var pathToAlbum = property
+            allAlbumCount += 1
 
             var albumTracks = folder[pathToAlbum]
 
@@ -145,11 +151,11 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                 if (tracks.length === index + 1) {
                     var album = metadata.album
                     var albumId = "album_" + _.snakeCase(album)
-                    
+
                     var artistString = _.lowerCase(_.toString(_.uniq(artist)))
-                    var artistId = "artist_" + _.snakeCase(artistString)                    
+                    var artistId = "artist_" + _.snakeCase(artistString)
                     var uniqArtists = _.uniq(artist)
-                    
+
                     saveAlbumInfo(albumId, album, uniqArtists, artistId, songs, pathToAlbum)
                     updateArtistInfo(artistId, albumId)
                 }
@@ -161,11 +167,20 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         var albumInfo = {
             "_id": albumId,
             "album": album,
-            "artist":uniqArtists,
+            "artist": uniqArtists,
             "songs": songs,
             "path": pathToAlbum
         }
+
         clientDB.put(albumInfo)
+            .then(function(resp) {
+                currentAlbumCount++
+                console.log(albumId + " is saved!" + "   " + currentAlbumCount)
+
+                if (allAlbumCount === currentAlbumCount) {
+                    readMusicDataFromDb()
+                }
+            })
     }
 
     function updateArtistInfo(artistId, albumId) {
@@ -177,6 +192,12 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             }
             return doc
         })
+    }
+
+    function showMainContent() {
+        $scope.loading = true
+        $scope.mainContent = false
+        $scope.$apply()
     }
 
 }])
