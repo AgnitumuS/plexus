@@ -10,6 +10,7 @@
     "electron-prebuilt": "^0.36.0"
   },
   "dependencies": {
+    "async": "^2.0.0-rc.2",
     "chunkit": "0.0.5",
     "deasync": "^0.1.4",
     "express": "^4.13.4",
@@ -20,6 +21,7 @@
     "node-static": "^0.7.7",
     "play-audio": "^0.1.0",
     "pouchdb": "^5.2.1",
+    "pouchdb-upsert": "^2.0.0",
     "random-word-by-length": "^0.1.0",
     "simple-peer": "^6.0.1",
     "socket.io": "^1.4.5"

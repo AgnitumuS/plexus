@@ -1,24 +1,29 @@
 angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog', function($scope, $mdDialog) {
 
-    $scope.imagePath = 'http://www.navidspage.com/wp-content/uploads/2009/01/theempyrean.jpg'
-
-    $scope.songInfo = false
-    $scope.playing = false
-
     var p = play("05 - Beginning Again.mp3")
 
+    //Play controller
     $scope.play = function() {
-
     }
 
     $scope.playSong = function(event) {
         p.pause()
         p = play(event.target.id).autoplay()
+        console.log(event)
     }
 
-
+    //click on artist name
     $scope.goToArtist = function(artist, event) {
+    }
 
+    $scope.showLog = function() {
+        clientDB.allDocs({
+            include_docs: true
+        }).then(function(result) {
+            console.log(result)
+        }).catch(function(err) {
+            console.log(err);
+        })
     }
 
     p.on('play', function() {
@@ -37,54 +42,68 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         }
 
         ipcRenderer.on('musicDirMessage', function(event, arg) {
-            console.log(arg)
             localStorage.setItem("musicDir", arg)
-            readSongsInfoIntoDb()
+            scanMusicFolder()
         })
 
         //this is for the test
         //readSongsInfoIntoDb()
 
-        readAlbumsFromDb()
-
+        readMusicDataFromDb()
     })
 
-
-    function readAlbumsFromDb() {
+    //It returns all the albums from the DB
+    function readMusicDataFromDb() {
         clientDB.allDocs({
-            include_docs: true
+            include_docs: true,
+            startkey: 'album_',
+            endkey: 'album_\uffff'
+        }).then(function(resultFromDb) {
+            processInfoFromDb(resultFromDb)
+        }).catch(function(err) {
+            console.log(err)
         })
-            .then(function(result) {
-                var albums = _.map(result.rows, 'doc')
-                $scope.albums = albums
-                var arrayOfArtists = _.map(albums, 'artist')
-                var artists = _.flatten(arrayOfArtists)
-                var uniqArtists = _.uniq(artists)
-                var orderedArtists = _.orderBy(uniqArtists)
-                $scope.artists = orderedArtists
-                $scope.$apply()
-            })
-            .catch(function(err) {
-                console.log(err)
-            })
     }
 
-    function readSongsInfoIntoDb() {
-        var musicFolder = "d:/Marton/etc/MUSIC"
+    //Process album information and save it in an Angular variable
+    function processInfoFromDb(resultFromDb) {
+        var albums = processAlbumInfo(resultFromDb)
+        processArtistInfo(albums)
+    }
+
+    function processAlbumInfo(resultFromDb) {
+        var albums = _.map(resultFromDb.rows, 'doc')
+        $scope.albums = albums
+        $scope.$apply()
+        return albums
+    }
+
+    function processArtistInfo(albums) {
+        var arrayOfArtists = _.map(albums, 'artist')
+        var artists = _.flatten(arrayOfArtists)
+        var uniqArtists = _.uniq(artists)
+        var orderedArtists = _.orderBy(uniqArtists)
+        $scope.artists = orderedArtists
+        $scope.$apply()
+    }
+
+    function scanMusicFolder() {
+        console.log('Start scanning...')
+        var rootMusicFolderName = localStorage.getItem("musicDir")
         var options = {
-            "path": musicFolder,
+            "path": rootMusicFolderName,
             "filter": {
                 "extensionAccept": ["mp3", "flac"]
             }
         }
 
-        var musicRoot = folderContents(options)
-        var musicRootFolder = musicRoot[".folders"]
+        //it could contain files and folders
+        var root = folderContents(options)
+        //we need only the folders
+        var rootMusicFolder = root[".folders"]
 
-        console.log('Start scanning...')
-        musicRootFolder.forEach(function(folder) {
-
-            var actualMusicFolder = musicFolder + "/" + folder
+        rootMusicFolder.forEach(function(folder) {
+            var actualMusicFolder = rootMusicFolderName + "/" + folder
             var albumFolderOptions = {
                 "path": actualMusicFolder,
                 "recursively": true,
@@ -101,39 +120,62 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
     function scanSubFolder(folder) {
         //iterate on each subfolder
         for (property in folder) {
-            var pathToSubfolder = property
+            var pathToAlbum = property
 
-            //iterate on each song in the subfodler
-            var tracks = folder[pathToSubfolder]
+            var albumTracks = folder[pathToAlbum]
 
-            readFolderMetadata(tracks, pathToSubfolder)
+            readAlbumTracks(albumTracks, pathToAlbum)
         }
-        console.log('Scanning is successfully finished.')
     }
 
-    function readFolderMetadata(tracks, pathToSubfolder) {
-        var album = ""
+    function readAlbumTracks(tracks, pathToAlbum) {
         var artist = []
         var songs = []
         tracks.forEach(function(element, index) {
-            var songPath = pathToSubfolder + "/" + element.name + "." + element.ext
-            var parser = mm(fs.createReadStream(songPath), function(err, metadata) {
+            var songPath = pathToAlbum + "/" + element.name + "." + element.ext
+
+            //read music metadata
+            mm(fs.createReadStream(songPath), function(err, metadata) {
                 if (err) throw err
 
                 artist.push(_.toString(metadata.artist))
                 songs.push({ title: metadata.title, no: metadata.track.no, path: songPath })
 
+                //this is last iteration
                 if (tracks.length === index + 1) {
-                    var albumInfo = {
-                        _id: _.uniqueId('album_'),
-                        album: metadata.album,
-                        artist: _.uniq(artist),
-                        songs: songs,
-                        path: pathToSubfolder
-                    }
-                    clientDB.put(albumInfo)
+                    var album = metadata.album
+                    var albumId = "album_" + _.snakeCase(album)
+                    
+                    var artistString = _.lowerCase(_.toString(_.uniq(artist)))
+                    var artistId = "artist_" + _.snakeCase(artistString)                    
+                    var uniqArtists = _.uniq(artist)
+                    
+                    saveAlbumInfo(albumId, album, uniqArtists, artistId, songs, pathToAlbum)
+                    updateArtistInfo(artistId, albumId)
                 }
             })
+        })
+    }
+
+    function saveAlbumInfo(albumId, album, uniqArtists, artistId, songs, pathToAlbum) {
+        var albumInfo = {
+            "_id": albumId,
+            "album": album,
+            "artist":uniqArtists,
+            "songs": songs,
+            "path": pathToAlbum
+        }
+        clientDB.put(albumInfo)
+    }
+
+    function updateArtistInfo(artistId, albumId) {
+        clientDB.upsert(artistId, function(doc) {
+            if (doc.albumsOfArtist) {
+                doc.albumsOfArtist.push(albumId)
+            } else {
+                doc.albumsOfArtist = [albumId]
+            }
+            return doc
         })
     }
 
