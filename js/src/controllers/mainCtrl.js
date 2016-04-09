@@ -1,4 +1,4 @@
-angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog', '$http', function($scope, $mdDialog, $http) {
+angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog', '$mdMedia', '$http', function($scope, $mdDialog, $mdMedia, $http) {
 
     var allAlbumCount = 0
     var currentAlbumCount = 0
@@ -27,7 +27,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
     }
 
     $scope.playSong = function(event) {
-        if(!playing){
+        if (!playing) {
             $scope.indicator = "img/icons/ic_pause_white_24px.svg"
         }
         var path = event.target.attributes['data-path'].value
@@ -61,6 +61,37 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         $scope.indicator = "img/icons/ic_play_arrow_white_24px.svg"
         playing = false
     })
+
+    $scope.showCreateRoom = function() {
+        var useFullScreen = ($mdMedia('sm') || $mdMedia('xs')) && $scope.customFullscreen;
+        $mdDialog.show({
+            templateUrl: 'partials/createroom.html',
+            parent: angular.element(document.body),
+            // targetEvent: ev,
+            clickOutsideToClose: true,
+            fullscreen: useFullScreen
+        })
+            .then(function(answer) {
+                $scope.status = 'You said the information was "' + answer + '".';
+            }, function() {
+                $scope.status = 'You cancelled the dialog.';
+            });
+        $scope.$watch(function() {
+            return $mdMedia('xs') || $mdMedia('sm');
+        }, function(wantsFullScreen) {
+            $scope.customFullscreen = (wantsFullScreen === true);
+        });
+    };
+
+    $scope.destroyDb = function() {
+        console.log("start deleting...")
+        localStorage.clear()
+        clientDB.destroy().then(function() {
+            console.log("db deleted")
+        }).catch(function(err) {
+            console.log(err)
+        })
+    }
 
     //page loaded
     angular.element(document).ready(function() {

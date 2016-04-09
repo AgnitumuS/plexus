@@ -3,7 +3,7 @@ angular.module('plexusControllers', [])
 /*global things..*/
 const socket = io.connect('http://localhost:3001')
 const db = new PouchDB('http://localhost:5984/sdps')
-const clientDB = new PouchDB('musicDB')
+const clientDB = new PouchDB('musicDB', {adapter: 'websql'})
 PouchDB.plugin(require('pouchdb-upsert'))
 
 /*node.js modules*/
