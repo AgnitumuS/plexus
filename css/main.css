@@ -19,6 +19,11 @@ body{
     margin: 3%;
 }
 
+
+#aInfo{
+    margin-right: 2%;    
+}
+
 .songTitle{
     color: #546E7A;
     padding: 0;
@@ -27,6 +32,10 @@ body{
 
 .margin-top-3{
     margin-top: 3%;
+}
+
+.padding-1{
+    padding: 2%;
 }
 
 .nomargin{

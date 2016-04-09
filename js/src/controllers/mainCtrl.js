@@ -1,8 +1,13 @@
-angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog', function($scope, $mdDialog) {
+angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog', '$http', function($scope, $mdDialog, $http) {
 
     var allAlbumCount = 0
     var currentAlbumCount = 0
 
+    var playing = false
+
+    $scope.indicator = "img/icons/ic_play_arrow_white_24px.svg"
+
+    $scope.artistInfo = true
     $scope.mainContent = true
     $scope.loading = false
 
@@ -10,27 +15,51 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
 
     //Play controller
     $scope.play = function() {
+        if (playing) {
+            p.pause()
+            $scope.indicator = "img/icons/ic_play_arrow_white_24px.svg"
+            playing = false
+        } else {
+            p.play()
+            $scope.indicator = "img/icons/ic_pause_white_24px.svg"
+            playing = true
+        }
     }
 
     $scope.playSong = function(event) {
+        if(!playing){
+            $scope.indicator = "img/icons/ic_pause_white_24px.svg"
+        }
+        var path = event.target.attributes['data-path'].value
+        var album = event.target.attributes['data-album'].value
+        var title = event.target.attributes['data-title'].value
+        var artist = event.target.attributes['data-artist'].value
+
+        var playingArtistString = artist
+
+        $scope.playingSong = title
+        $scope.playingArtist = playingArtistString
+
         p.pause()
-        p = play(event.target.id).autoplay()
-        console.log(event)
+        p.src(path)
+        p.play()
     }
 
     //click on artist name
     $scope.goToArtist = function(artist, event) {
-    }
-
-    $scope.showLog = function() {
+        downloadArtistInfo(artist)
+        readArtistFromDb(getArtistId(artist))
+        $scope.artistInfo = false
     }
 
     p.on('play', function() {
-        console.log('playing')
+        $scope.indicator = "img/icons/ic_pause_white_24px.svg"
+        playing = true
     })
 
     p.on('pause', function() {
-        console.log('pause')
+        $scope.indicator = "img/icons/ic_play_arrow_white_24px.svg"
+        playing = false
     })
 
     //page loaded
@@ -39,7 +68,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         if (localStorage.getItem("musicDir") === null) {
             ipcRenderer.send('getMusicDir', 'ping')
         } else {
-            readMusicDataFromDb()
+            readAlbumsFromDb()
             showMainContent()
         }
 
@@ -54,8 +83,48 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         //readSongsInfoIntoDb()
     })
 
+    function downloadArtistInfo(artist) {
+        $http.get('http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=' + artist + '&api_key=edf51d0b47dbcc6b8cc143c450297cf1&format=json')
+            .then(function(resp) {
+                if (resp.status === 200) {
+                    $scope.artistName = artist
+                    $scope.artistImage = resp.data.artist.image[2]['#text']
+                    if (resp.data.artist.bio.summary) {
+                        $scope.artistBio = resp.data.artist.bio.summary
+                    }
+                }
+            })
+    }
+
+    function readArtistFromDb(artistId) {
+        clientDB.allDocs({
+            include_docs: true,
+            startkey: artistId,
+            endkey: artistId + '\uffff'
+        }).then(function(artistResult) {
+            if (artistResult.rows) {
+                var albumsOfArtist = artistResult.rows[0].doc.albumsOfArtist
+                $scope.albums = []
+                albumsOfArtist.forEach(function(album) {
+                    getAlbumFromDb(album)
+                })
+            }
+        }).catch(function(err) {
+            console.log(err)
+        })
+    }
+
+    function getAlbumFromDb(albumId) {
+        clientDB.get(albumId).then(function(doc) {
+            $scope.albums.push(doc)
+            $scope.$apply()
+        }).catch(function(err) {
+            console.log(err)
+        })
+    }
+
     //It returns all the albums from the DB
-    function readMusicDataFromDb() {
+    function readAlbumsFromDb() {
         clientDB.allDocs({
             include_docs: true,
             startkey: 'album_',
@@ -93,12 +162,11 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
     }
 
     function scanMusicFolder() {
-        console.log('Start scanning...')
         var rootMusicFolderName = localStorage.getItem("musicDir")
         var options = {
             "path": rootMusicFolderName,
             "filter": {
-                "extensionAccept": ["mp3", "flac"]
+                "extensionAccept": ["mp3"]
             }
         }
 
@@ -113,7 +181,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                 "path": actualMusicFolder,
                 "recursively": true,
                 "filter": {
-                    "extensionAccept": ["mp3", "flac"]
+                    "extensionAccept": ["mp3"]
                 }
             }
             var actualMusicFolderContent = folderContents(albumFolderOptions)
@@ -135,7 +203,6 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
     }
 
     function readAlbumTracks(tracks, pathToAlbum) {
-        var artist = []
         var songs = []
         tracks.forEach(function(element, index) {
             var songPath = pathToAlbum + "/" + element.name + "." + element.ext
@@ -144,30 +211,29 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             mm(fs.createReadStream(songPath), function(err, metadata) {
                 if (err) throw err
 
-                artist.push(_.toString(metadata.artist))
                 songs.push({ title: metadata.title, no: metadata.track.no, path: songPath })
 
                 //this is last iteration
                 if (tracks.length === index + 1) {
+                    var artist = _.toString(metadata.artist)
                     var album = metadata.album
                     var albumId = "album_" + _.snakeCase(album)
 
-                    var artistString = _.lowerCase(_.toString(_.uniq(artist)))
-                    var artistId = "artist_" + _.snakeCase(artistString)
-                    var uniqArtists = _.uniq(artist)
+                    var artistString = _.lowerCase(_.toString(artist))
+                    var artistId = getArtistId(artistString)
 
-                    saveAlbumInfo(albumId, album, uniqArtists, artistId, songs, pathToAlbum)
+                    saveAlbumInfo(albumId, album, artist, artistId, songs, pathToAlbum)
                     updateArtistInfo(artistId, albumId)
                 }
             })
         })
     }
 
-    function saveAlbumInfo(albumId, album, uniqArtists, artistId, songs, pathToAlbum) {
+    function saveAlbumInfo(albumId, album, artist, artistId, songs, pathToAlbum) {
         var albumInfo = {
             "_id": albumId,
             "album": album,
-            "artist": uniqArtists,
+            "artist": artist,
             "songs": songs,
             "path": pathToAlbum
         }
@@ -175,10 +241,9 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         clientDB.put(albumInfo)
             .then(function(resp) {
                 currentAlbumCount++
-                console.log(albumId + " is saved!" + "   " + currentAlbumCount)
 
                 if (allAlbumCount === currentAlbumCount) {
-                    readMusicDataFromDb()
+                    readAlbumsFromDb()
                 }
             })
     }
@@ -192,6 +257,10 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             }
             return doc
         })
+    }
+
+    function getArtistId(artistString) {
+        return "artist_" + _.snakeCase(_.lowerCase(artistString))
     }
 
     function showMainContent() {
