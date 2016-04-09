@@ -63,25 +63,22 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
     })
 
     $scope.showCreateRoom = function() {
-        var useFullScreen = ($mdMedia('sm') || $mdMedia('xs')) && $scope.customFullscreen;
+        showDialog('partials/createroom.html')
+    };
+
+    $scope.showJoinRoom = function(ev) {
+        showDialog('partials/joinroom.html')
+    }
+
+    function showDialog(templateUrl) {
+        var useFullScreen = ($mdMedia('sm') || $mdMedia('xs')) && $scope.customFullscreen
         $mdDialog.show({
-            templateUrl: 'partials/createroom.html',
+            templateUrl: templateUrl,
             parent: angular.element(document.body),
-            // targetEvent: ev,
             clickOutsideToClose: true,
             fullscreen: useFullScreen
-        })
-            .then(function(answer) {
-                $scope.status = 'You said the information was "' + answer + '".';
-            }, function() {
-                $scope.status = 'You cancelled the dialog.';
-            });
-        $scope.$watch(function() {
-            return $mdMedia('xs') || $mdMedia('sm');
-        }, function(wantsFullScreen) {
-            $scope.customFullscreen = (wantsFullScreen === true);
         });
-    };
+    }
 
     $scope.destroyDb = function() {
         console.log("start deleting...")
