@@ -24,9 +24,10 @@ angular.module('plexusControllers').controller('joinRoomCtrl', ['$scope', functi
         const chunk = new Buffer(data)
         var buffered = JSON.parse(chunk.toString())
 
-        if (buffered.song) {
+        if (buffered.filename) {
+            saveSongInfo(buffered)
             $scope.connectToPeerProgressLine = false
-            saveSong(buffered.song);
+            saveSong(buffered.filename)
         }
         else {
             var dataBuffer = new Buffer(buffered.data.data)
@@ -78,6 +79,17 @@ angular.module('plexusControllers').controller('joinRoomCtrl', ['$scope', functi
     function createWriteableStream(folderToSave, songName) {
         var writeableStreamName = folderToSave + songName
         writeableStream = fs.createWriteStream(writeableStreamName)
+    }
+
+    function saveSongInfo(info){
+        var songInfo = {
+            _id: "artist_" + info.artist + "_song_" + info.title,
+            artist: info.artist,
+            album: info.album,
+            title: info.title,
+            filename: info.filename
+        }
+        downloadedMusicDb.put(songInfo)
     }
 
 }])

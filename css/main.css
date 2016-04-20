@@ -19,6 +19,9 @@ body{
     margin: 3%;
 }
 
+.favoriteArtist{
+    fill: red;
+}
 
 #aInfo{
     margin-right: 2%;    
