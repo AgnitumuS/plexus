@@ -15,12 +15,8 @@ body{
     margin-bottom: 60px
 }
 
-#joinRoomDiv{
-    margin: 3%;
-}
-
 .favoriteArtist{
-    fill: red;
+    fill: #00a;
 }
 
 #aInfo{

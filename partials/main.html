@@ -16,8 +16,6 @@
 
                 <span flex></span>
 
-                <!--<md-button class="md-raised md-primary" ng-click="showCreateRoom()" aria-label="Create Room">Create Room</md-button>
-                <md-button class="md-raised" ng-click="showJoinRoom($event)" aria-label="Join Room">Join Room</md-button>-->
                 <a href="#">
                     <md-icon ng-click="toggleRight()" md-svg-icon="img/icons/ic_audiotrack_white_24px.svg"></md-icon>
                 </a>
@@ -30,7 +28,7 @@
                         <md-menu-item>
                             <md-button ng-click="">
                                 <div layout="row" flex>
-                                    <a ng-click="destroyDb()">Delete Db</a>
+                                    <p ng-click="destroyDb()">Delete Db</p>
                                 </div>
                             </md-button>
                         </md-menu-item>
@@ -86,7 +84,7 @@
                                         <p>{{album.artist}}</p>
                                     </md-card-title-text>
                                     <md-card-title-media>
-                                        <div class="md-media-sm card-media"><img src="cover.jpg"></div>
+                                        <div class="md-media-sm card-media img-thumbnail"><img ng-src="{{album.coverPath}}"></div>
                                     </md-card-title-media>
                                 </md-card-title>
                                 <md-card-content>
@@ -105,6 +103,7 @@
                     </div>
                 </div>
             </md-content>
+            
             <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right">
                 <md-toolbar class="md-theme-light">
                     <h1 class="md-toolbar-tools">Ongoing Connections</h1>

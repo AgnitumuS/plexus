@@ -1,31 +1,9 @@
 <div ng-controller="joinRoomCtrl">
-
-    <!--<md-toolbar id="menubar">
-        <div class="md-toolbar-tools">
-            <a href="#/">
-                <md-button aria-label="Go Back">
-                    Go Back
-                </md-button>
-            </a>
-            <h2>
-            <span>plexus</span>
-        </h2>
-            <span flex></span>
-        </div>
-    </md-toolbar>-->
-
-    <!--<span ng-hide="connectToPeerProgressLine">
-        <md-progress-linear md-mode="indeterminate"></md-progress-linear>
-    </span>-->
-
-    <div id="joinRoomDiv">
-        <md-content layout-padding>
-            <md-input-container class="md-block">
-                <label>Room name</label>
-                <input required md-no-asterisk name="Room name" ng-model="roomName">
-                <md-button class="md-raised" ng-click="joinRoom()">Join</md-button>
-            </md-input-container>
-        </md-content>
-    </div>
-
+    <md-content layout-padding>
+        <md-input-container class="md-block">
+            <label>Room name</label>
+            <input required md-no-asterisk name="Room name" ng-model="roomName">
+            <md-button class="md-raised" ng-click="joinRoom()">Join</md-button>
+        </md-input-container>
+    </md-content>
 </div>

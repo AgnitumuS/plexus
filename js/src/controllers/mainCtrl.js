@@ -3,40 +3,43 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
 
         var allAlbumCount = 0
         var currentAlbumCount = 0
-        $scope.loadingIndicator = 0
-
         var playing = false
+        var p = play("05 - Beginning Again.mp3")
 
         $scope.connectionisOn = false
-
+        $scope.loadingIndicator = 0
         $scope.indicator = "img/icons/ic_play_arrow_white_24px.svg"
-
         $scope.artistInfo = true
         $scope.mainContent = true
         $scope.loading = false
 
-        var p = play("05 - Beginning Again.mp3")
+        //page loaded
+        angular.element(document).ready(function () {
 
-        $scope.toggleRight = buildToggler('right')
-
-        function buildToggler(navID) {
-            return function () {
-                $mdSidenav(navID)
-                    .toggle()
-                    .then(function () {
-                        $scope.connectionisOn = sharedProperties.getConnection()
-                        console.log($scope.connectionisOn)
-                    });
+            if (localStorage.getItem("musicDir") === null) {
+                ipcRenderer.send('getMusicDir', 'ping')
+            } else {
+                readAlbumsFromDb()
+                showMainContent()
             }
-        }
 
-        $scope.share = function (album, song) {
-            console.log("Sending " + song.title + "...")
-            if (peerInitiator != undefined) {
-                fileSender.setPeer(peerInitiator)
-                fileSender.sendFile(album.artist, album.album, song.title, song.path)
-            }
-        }
+            ipcRenderer.on('musicDirMessage', function (event, arg) {
+                localStorage.setItem("musicDir", arg)
+                allAlbumCount = 0
+                currentAlbumCount = 0
+                scanMusicFolder()
+            })
+        })
+
+        p.on('play', function () {
+            $scope.indicator = "img/icons/ic_pause_white_24px.svg"
+            playing = true
+        })
+
+        p.on('pause', function () {
+            $scope.indicator = "img/icons/ic_play_arrow_white_24px.svg"
+            playing = false
+        })
 
         //Play controller
         $scope.play = function () {
@@ -72,20 +75,17 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
 
         //click on artist name
         $scope.goToArtist = function (artist, event) {
-            downloadArtistInfo(artist)
-            readArtistFromDb(getArtistId(artist))
+            readArtistFromDb(artist)
             $scope.artistInfo = false
         }
 
-        p.on('play', function () {
-            $scope.indicator = "img/icons/ic_pause_white_24px.svg"
-            playing = true
-        })
-
-        p.on('pause', function () {
-            $scope.indicator = "img/icons/ic_play_arrow_white_24px.svg"
-            playing = false
-        })
+        $scope.share = function (album, song) {
+            console.log("Sending " + song.title + "...")
+            if (peerInitiator != undefined) {
+                fileSender.setPeer(peerInitiator)
+                fileSender.sendFile(album.artist, album.album, song.title, song.path)
+            }
+        }
 
         $scope.showCreateRoom = function () {
             showDialog('partials/createroom.html')
@@ -93,6 +93,39 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
 
         $scope.showJoinRoom = function (ev) {
             showDialog('partials/joinroom.html')
+        }
+
+        $scope.destroyDb = function () {
+            console.log("start deleting...")
+            localStorage.clear()
+
+            $scope.artists = []
+            $scope.albums = []
+
+            musicDb.destroy().then(function () {
+                console.log("db 1 deleted")
+            }).catch(function (err) {
+                console.log(err)
+            })
+
+            downloadedMusicDb.destroy().then(function () {
+                console.log("db 2 deleted")
+            }).catch(function (err) {
+                console.log(err)
+            })
+        }
+
+        $scope.toggleRight = buildToggler('right')
+
+        function buildToggler(navID) {
+            return function () {
+                $mdSidenav(navID)
+                    .toggle()
+                    .then(function () {
+                        $scope.connectionisOn = sharedProperties.getConnection()
+                        console.log($scope.connectionisOn)
+                    });
+            }
         }
 
         function showDialog(templateUrl) {
@@ -105,62 +138,52 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             });
         }
 
-        $scope.destroyDb = function () {
-            console.log("start deleting...")
-            localStorage.clear()
-            musicDb.destroy().then(function () {
-                console.log("db deleted")
-            }).catch(function (err) {
-                console.log(err)
-            })
-        }
-
-        //page loaded
-        angular.element(document).ready(function () {
-
-            if (localStorage.getItem("musicDir") === null) {
-                ipcRenderer.send('getMusicDir', 'ping')
-            } else {
-                readAlbumsFromDb()
-                showMainContent()
-            }
-
-            ipcRenderer.on('musicDirMessage', function (event, arg) {
-                localStorage.setItem("musicDir", arg)
-                allAlbumCount = 0
-                currentAlbumCount = 0
-                scanMusicFolder()
-            })
-
-            //this is for the test
-            //readSongsInfoIntoDb()
-        })
-
-        function downloadArtistInfo(artist) {
-            $http.get('http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=' + artist + '&api_key=edf51d0b47dbcc6b8cc143c450297cf1&format=json')
-                .then(function (resp) {
-                    if (resp.status === 200) {
-                        $scope.artistName = artist
-                        $scope.artistImage = resp.data.artist.image[2]['#text']
-                    }
-                })
-        }
-
-        function readArtistFromDb(artistId) {
+        function readArtistFromDb(artist) {
+            var artistId = getArtistId(artist)
             musicDb.allDocs({
                 include_docs: true,
                 startkey: artistId,
                 endkey: artistId + '\uffff'
             }).then(function (artistResult) {
                 if (artistResult.rows) {
-                    var albumsOfArtist = artistResult.rows[0].doc.albumsOfArtist
-                    $scope.albums = []
-                    albumsOfArtist.forEach(function (album) {
-                        getAlbumFromDb(album)
-                    })
+                    var searchedArtist = artistResult.rows[0].doc
+                    var albumsOfArtist = searchedArtist.albumsOfArtist
+                    if (!searchedArtist.imagePath) {
+                        downloadArtistImage(artist, function (imagePath) {
+                            saveArtistImage(artist, artistId, imagePath, function () {
+                                setScopeArtistVariables(artist, imagePath, albumsOfArtist)
+                            })
+                        })
+                    } else {
+                        setScopeArtistVariables(artist, searchedArtist.imagePath, albumsOfArtist)
+                    }
                 }
             }).catch(function (err) {
-                console.log(err)
+                console.error(err)
+            })
+        }
+
+        function setScopeArtistVariables(artist, imagePath, albumsOfArtist) {
+            $scope.artistName = artist
+            $scope.artistImage = imagePath
+            $scope.albums = []
+            albumsOfArtist.forEach(function (album) {
+                getAlbumFromDb(album)
+            })
+        }
+
+        function saveArtistImage(artist, artistId, imagePath, callback) {
+            musicDb.get(artistId).then(function (doc) {
+                return musicDb.put({
+                    "_id": artistId,
+                    "_rev": doc._rev,
+                    "albumsOfArtist": doc.albumsOfArtist,
+                    "imagePath": imagePath
+                })
+            }).then(function () {
+                callback(artist)
+            }).catch(function (err) {
+                console.error('Error in saveArtistImage ' + err)
             })
         }
 
@@ -273,7 +296,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                         var artistId = getArtistId(artistString)
 
                         saveAlbumInfo(albumId, album, artist, artistId, songs, pathToAlbum)
-                        updateArtistInfo(artistId, albumId)
+                        upsertArtistInfo(artist, artistId, albumId)
                     }
                 })
             })
@@ -288,19 +311,60 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                 "path": pathToAlbum
             }
 
+            getAlbumCover(albumInfo)
+        }
+
+        function getAlbumCover(albumInfo) {
+            var album = albumInfo.album
+            var artist = albumInfo.artist
+            $http.get('http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=' + process.env.LASTFM_API_KEY + '&artist=' + artist + '&album=' + album + '&format=json')
+                .then(function (resp) {
+                    var coverUrl = ""
+                    if (resp.data.error) {
+                        console.log('no album cover for ths album: ' + album)
+                        putAlbumInfoIntoDb(albumInfo)
+                    } else if (resp.data.album.image) {
+                        coverUrl = resp.data.album.image[2]["#text"]
+                        if (coverUrl != "") {
+                            var coverPath = 'covers/' + album + '.jpg'
+                            downloadImage(coverUrl, coverPath, function () {
+                                albumInfo.coverPath = coverPath
+                                putAlbumInfoIntoDb(albumInfo)
+                            })
+                        } else {
+                            putAlbumInfoIntoDb(albumInfo)
+                        }
+                    } else {
+                        putAlbumInfoIntoDb(albumInfo)
+                    }
+                }).catch(function (err) {
+                    console.log(err)
+                })
+        }
+
+        function downloadImage(coverUrl, coverPath, callback) {
+            request.head(coverUrl, function (err, res, body) {
+                request(coverUrl).pipe(fs.createWriteStream(coverPath)).on('close', callback)
+            })
+        }
+
+        function putAlbumInfoIntoDb(albumInfo) {
             musicDb.put(albumInfo)
                 .then(function (resp) {
                     currentAlbumCount++
-                    $scope.loadingIndicator = (currentAlbumCount / allAlbumCount) *100
+                    $scope.loadingIndicator = (currentAlbumCount / allAlbumCount) * 100
                     $scope.$apply()
 
                     if (allAlbumCount === currentAlbumCount) {
                         readAlbumsFromDb()
                     }
                 })
+                .catch(function (err) {
+                    console.log("Oh err - Putting album info into DB: " + err)
+                })
         }
 
-        function updateArtistInfo(artistId, albumId) {
+        function upsertArtistInfo(artist, artistId, albumId) {
             musicDb.upsert(artistId, function (doc) {
                 if (doc.albumsOfArtist) {
                     doc.albumsOfArtist.push(albumId)
@@ -309,6 +373,27 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                 }
                 return doc
             })
+        }
+
+        function downloadArtistImage(artist, callback) {
+            $http.get('http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=' + artist + '&api_key=' + process.env.LASTFM_API_KEY + '&format=json')
+                .then(function (resp) {
+                    console.log('downloading... ' + artist)
+                    if (resp.data.error) {
+                        console.log('Error occured.')
+                    } else if (resp.data.artist.image) {
+                        var imageUrl = ""
+                        if (resp.data.artist.image[2]["#text"]) {
+                            imageUrl = resp.data.artist.image[2]["#text"]
+                        }
+                        if (imageUrl != "") {
+                            var imagePath = 'artists/' + artist + '.jpg'
+                            downloadImage(imageUrl, imagePath, function () {
+                                callback(imagePath)
+                            })
+                        }
+                    }
+                })
         }
 
         function getArtistId(artistString) {
