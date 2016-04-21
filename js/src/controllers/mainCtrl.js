@@ -3,6 +3,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
 
         var allAlbumCount = 0
         var currentAlbumCount = 0
+        $scope.loadingIndicator = 0
 
         var playing = false
 
@@ -290,6 +291,8 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             musicDb.put(albumInfo)
                 .then(function (resp) {
                     currentAlbumCount++
+                    $scope.loadingIndicator = (currentAlbumCount / allAlbumCount) *100
+                    $scope.$apply()
 
                     if (allAlbumCount === currentAlbumCount) {
                         readAlbumsFromDb()
