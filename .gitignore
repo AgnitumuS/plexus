@@ -1,8 +1,7 @@
 node_modules
-.vscode
-server/node_modules
-05 - Beginning Again.mp3
-covers
-artists
+app/node_modules
+app/05 - Beginning Again.mp3
+app/covers
+app/artists
+app/downloaded
 .env
-downloaded

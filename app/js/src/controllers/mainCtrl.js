@@ -80,8 +80,8 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
 
         //click on artist name
         $scope.goToArtist = function (artist, event) {
-            readArtistFromDb(artist)
             $scope.artistInfo = false
+            readArtistFromDb(artist)
         }
 
         $scope.share = function (album, song) {
@@ -451,13 +451,11 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                         var imageUrl = ""
                         if (resp.data.artist.image[2]["#text"]) {
                             imageUrl = resp.data.artist.image[2]["#text"]
-                        }
-                        if (imageUrl != "") {
                             var imagePath = 'artists/' + artist + '.jpg'
                             downloadImage(imageUrl, imagePath, function () {
                                 callback(imagePath)
                             })
-                        }
+                        }                        
                     }
                 })
         }
