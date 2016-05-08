@@ -5,8 +5,8 @@ require('dotenv').config()
 /*global things..*/
 const socket = io.connect('http://localhost:3001')
 const db = new PouchDB('http://localhost:5984/sdps')
-const musicDb = new PouchDB('musicDB', { adapter: 'websql' })
-const downloadedMusicDb = new PouchDB('downloadedMusicDb', { adapter: 'websql' })
+const musicDb = new PouchDB('musicDB')
+const downloadedMusicDb = new PouchDB('downloadedMusicDb')
 PouchDB.plugin(require('pouchdb-upsert'))
 
 var peerInitiator

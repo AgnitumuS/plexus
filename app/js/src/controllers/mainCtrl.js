@@ -4,7 +4,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         var allAlbumCount = 0
         var currentAlbumCount = 0
         var playing = false
-        var p = play("05 - Beginning Again.mp3")
+        var p = play("zero.mp3")
 
         $scope.connectionisOnProvider = false
         $scope.connectionisOnConsumer = false
@@ -29,10 +29,17 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             }
 
             ipcRenderer.on('musicDirMessage', function (event, arg) {
-                localStorage.setItem("musicDir", arg)
-                allAlbumCount = 0
-                currentAlbumCount = 0
-                scanMusicFolder()
+                if (arg == null) {
+                    $scope.loadingIndicator = 100;
+                    $scope.loadingMessage = "You have to specify your music library!"
+                } else {
+                    $scope.loadingMessage = "Scanning your music library..."
+                    localStorage.setItem("musicDir", arg)
+                    allAlbumCount = 0
+                    currentAlbumCount = 0
+                    scanMusicFolder()
+                }
+                $scope.$apply()
             })
         })
 
@@ -393,7 +400,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                         coverUrl = resp.data.album.image[2]["#text"]
                         if (coverUrl != "") {
                             var coverPath = 'covers/' + album + '.jpg'
-                            downloadImage(coverUrl, coverPath, function () {
+                            downloadImage(coverUrl, 'app/covers/' + album + '.jpg', function () {
                                 albumInfo.coverPath = coverPath
                                 putAlbumInfoIntoDb(albumInfo)
                             })
@@ -452,10 +459,10 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                         if (resp.data.artist.image[2]["#text"]) {
                             imageUrl = resp.data.artist.image[2]["#text"]
                             var imagePath = 'artists/' + artist + '.jpg'
-                            downloadImage(imageUrl, imagePath, function () {
+                            downloadImage(imageUrl, 'app/artists/' + artist + '.jpg' , function () {
                                 callback(imagePath)
                             })
-                        }                        
+                        }
                     }
                 })
         }

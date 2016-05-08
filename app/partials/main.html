@@ -3,7 +3,7 @@
     <div ng-hide="loading">
         <div layout="column" layout-align="center center">
             <md-progress-circular md-diameter="96" md-mode='determinate' value="{{loadingIndicator}}" class="margin-top-3"></md-progress-circular>
-            <h2>Scanning your music directory...</h2>
+            <h2>{{loadingMessage}}</h2>
         </div>
     </div>
 
