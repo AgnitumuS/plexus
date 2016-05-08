@@ -6,6 +6,8 @@ const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
 
+const notifier = require('node-notifier')
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -29,6 +31,7 @@ function createWindow() {
         // when you should delete the corresponding element.
         mainWindow = null;
     });
+
 }
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -56,4 +59,14 @@ ipcMain.on('getMusicDir', function (event, arg) {
     const dialog = require('electron').dialog
     var dir = dialog.showOpenDialog({ properties: ['openDirectory'] })
     event.sender.send('musicDirMessage', dir);
+})
+
+
+ipcMain.on('showNotification', function (event, arg) {    
+    console.log(arg)
+    notifier.notify({
+        'title': arg.artist,
+        'message': arg.song,
+        'icon': arg.coverPath
+    })
 })

@@ -43,7 +43,17 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             })
         })
 
-        p.on('play', function () {
+        p.on('play', function () {            
+            var notificationinfo = {}
+            notificationinfo.artist = $scope.playingArtist
+            notificationinfo.song = $scope.playingSong
+            
+            var paths = [__dirname]
+            var coverPath = _.split($scope.actualCoverPath, '/')
+            paths = paths.concat(coverPath);
+            
+            notificationinfo.coverPath = path.join.apply(null, paths)       
+            ipcRenderer.send('showNotification', notificationinfo)
             $scope.indicator = "img/icons/ic_pause_white_24px.svg"
             playing = true
         })
@@ -74,6 +84,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             var album = event.target.attributes['data-album'].value
             var title = event.target.attributes['data-title'].value
             var artist = event.target.attributes['data-artist'].value
+            $scope.actualCoverPath = event.target.attributes['data-coverPath'].value
 
             var playingArtistString = artist
 
@@ -459,7 +470,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                         if (resp.data.artist.image[2]["#text"]) {
                             imageUrl = resp.data.artist.image[2]["#text"]
                             var imagePath = 'artists/' + artist + '.jpg'
-                            downloadImage(imageUrl, 'app/artists/' + artist + '.jpg' , function () {
+                            downloadImage(imageUrl, 'app/artists/' + artist + '.jpg', function () {
                                 callback(imagePath)
                             })
                         }

@@ -21,6 +21,7 @@ const folderContents = require('folder-contents')
 const mm = require('musicmetadata')
 const _ = require('lodash')
 const request = require('request')
+const path = require('path')
 
 // electron
 const ipcRenderer = require('electron').ipcRenderer

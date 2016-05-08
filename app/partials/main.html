@@ -91,7 +91,7 @@
                                         <md-list-item class="md-1-line" ng-repeat="song in album.songs | orderBy: 'no'">
                                             <div class="md-list-item-text">
                                                 <md-icon md-svg-icon="img/icons/ic_share_white_18px.svg" ng-click="share(album, song)"></md-icon>
-                                                <a href="#" class="songTitle" data-path="{{song.path}}" data-album="{{album.album}}" data-no="{{song.no}}" data-title="{{song.title}}"
+                                                <a href="#" class="songTitle" data-path="{{song.path}}" data-album="{{album.album}}" data-no="{{song.no}}" data-title="{{song.title}}" data-coverPath="{{album.coverPath}}"
                                                     data-artist="{{album.artist}}" ng-click="playSong($event)">{{ song.title }}</a>
                                             </div>
                                         </md-list-item>
