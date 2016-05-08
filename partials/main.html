@@ -69,7 +69,6 @@
                                 </div>
                                 <div>
                                     <h2 ng-bind="artistName"></h2>
-                                    <img src="img/icons/ic_favorite_red_48px.svg">
                                 </div>
                             </div>
                         </div>
@@ -91,7 +90,7 @@
                                     <md-list>
                                         <md-list-item class="md-1-line" ng-repeat="song in album.songs | orderBy: 'no'">
                                             <div class="md-list-item-text">
-                                                <md-icon md-svg-icon="img/icons/ic_share_white_18px.svg" ng-click="share(album,song)"></md-icon>
+                                                <md-icon md-svg-icon="img/icons/ic_share_white_18px.svg" ng-click="share(album, song)"></md-icon>
                                                 <a href="#" class="songTitle" data-path="{{song.path}}" data-album="{{album.album}}" data-no="{{song.no}}" data-title="{{song.title}}"
                                                     data-artist="{{album.artist}}" ng-click="playSong($event)">{{ song.title }}</a>
                                             </div>
@@ -103,36 +102,43 @@
                     </div>
                 </div>
             </md-content>
-            
+
             <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right">
                 <md-toolbar class="md-theme-light">
                     <h1 class="md-toolbar-tools">Ongoing Connections</h1>
                 </md-toolbar>
-                <md-content layout-padding ng-hide="connectionisOn">
-                    <h4>You have no ongoing connections...</h4>
-                     <h5>Create one or join one!</h5>
+                <md-content layout-padding ng-hide="roomButtons()" class="text-center">
+                    <h5 class="text-uppercase">Create or Join a room!</h5>
                     <md-button class="md-raised md-primary" ng-click="showCreateRoom()" aria-label="Create Room">Create Room</md-button>
-                    <md-button class="md-raised" ng-click="showJoinRoom($event)" aria-label="Join Room">Join Room</md-button>
+                    <md-button class="md-raised" ng-click="showJoinRoom()" aria-label="Join Room">Join Room</md-button>
                 </md-content>
-                <md-content layout-padding ng-show="connectionisOn">
-                    <p>You've got some songs from <strong>Rob Jackson</strong></p>
+
+                <md-content layout-padding ng-show="providerMessages()" class="text-center">
+                    <p class="text-uppercase">Great! You have an open connection!</p>
+                    <p ng-show="initiatorMessage()">Send some files to the other user</p>
+                    <p ng-hide="initiatorMessage()">Your sent songs:</p>
                     <md-list>
-                        <md-list-item>
-                            <p>Head Down</p>
-                            <md-icon md-svg-icon="img/icons/ic_play_arrow_black_18px.svg" aria-label="Open Chat" class="md-secondary md-hue-3"></md-icon>
-                        </md-list-item>
-                        <md-list-item>
-                            <p>I Me Mine</p>
-                            <md-icon md-svg-icon="img/icons/ic_play_arrow_black_18px.svg" aria-label="Open Chat" class="md-secondary md-hue-3"></md-icon>
-                        </md-list-item>
-                        <md-list-item>
-                            <p>Dig a Pony</p>
-                            <md-icon md-svg-icon="img/icons/ic_play_arrow_black_18px.svg" aria-label="Open Chat" class="md-secondary md-hue-3"></md-icon>
+                        <md-list-item ng-repeat="sent in sentSongsByInitiator">
+                            <p><strong>{{sent.song}}</strong> by <em>{{sent.artist}}</em></p>
                         </md-list-item>
                     </md-list>
                     <md-button class="md-primary">
                         Close Connection
                     </md-button>
+                </md-content>
+
+                <md-content layout-padding ng-show="consumerMessages()" class="text-center">
+                    <p class="text-uppercase">Great! You have an open connection!</p>
+                    <p ng-show="consumerMessage()">You should get some songs soon...</p>
+                    <p ng-hide="consumerMessage()">Yout recived songs:</p>
+                    <md-list>
+                        <md-list-item ng-repeat="recived in receivedSongsFromInitiator">
+                            <div class="md-list-item-text">
+                                <md-icon md-svg-icon="img/icons/ic_play_arrow_black_18px.svg" ng-click="playReceivedSong(recived.filename)"></md-icon>
+                                <p><strong>{{recived.song}}</strong> by <em>{{recived.artist}}</em></p>
+                            </div>
+                        </md-list-item>
+                    </md-list>
                 </md-content>
             </md-sidenav>
         </section>

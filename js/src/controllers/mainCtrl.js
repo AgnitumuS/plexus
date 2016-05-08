@@ -6,12 +6,17 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         var playing = false
         var p = play("05 - Beginning Again.mp3")
 
-        $scope.connectionisOn = false
+        $scope.connectionisOnProvider = false
+        $scope.connectionisOnConsumer = false
         $scope.loadingIndicator = 0
         $scope.indicator = "img/icons/ic_play_arrow_white_24px.svg"
         $scope.artistInfo = true
         $scope.mainContent = true
         $scope.loading = false
+        $scope.sentSongsByInitiator = []
+        $scope.sentSongs = 0
+        $scope.receivedSongs = 0
+        $scope.receivedSongsFromInitiator = []
 
         //page loaded
         angular.element(document).ready(function () {
@@ -80,18 +85,38 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
         }
 
         $scope.share = function (album, song) {
-            console.log("Sending " + song.title + "...")
+            if (!$scope.connectionisOnProvider) {
+                $scope.toggleRight()
+            }
             if (peerInitiator != undefined) {
+                $scope.sentSongsByInitiator.push({ artist: album.artist, song: song.title })
                 fileSender.setPeer(peerInitiator)
                 fileSender.sendFile(album.artist, album.album, song.title, song.path)
+                $scope.sentSongs++
             }
         }
 
         $scope.showCreateRoom = function () {
+
+            sharedProperties.registerProvider(function () {
+                $scope.connectionisOnProvider = sharedProperties.getConnection()
+            })
+
             showDialog('partials/createroom.html')
         };
 
-        $scope.showJoinRoom = function (ev) {
+        $scope.showJoinRoom = function () {
+            sharedProperties.registerConsumer(function () {
+                $scope.connectionisOnConsumer = sharedProperties.getConnectionOnConsumer()
+                var downloadedSongsNumber = sharedProperties.getDownloadedSongsCount()
+
+                if ($scope.receivedSongs < downloadedSongsNumber) {
+                    $scope.receivedSongs = downloadedSongsNumber
+                    $scope.receivedSongsFromInitiator.push(sharedProperties.getLastReceivedSong())
+                    console.log($scope.receivedSongsFromInitiator)
+                }
+            })
+
             showDialog('partials/joinroom.html')
         }
 
@@ -115,6 +140,48 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
             })
         }
 
+        $scope.initiatorMessage = function () {
+            if ($scope.sentSongs == 0) {
+                return true
+            }
+            return false
+        }
+
+        $scope.consumerMessage = function () {
+            if ($scope.receivedSongs == 0) {
+                return true
+            }
+            return false
+        }
+
+        $scope.roomButtons = function () {
+            if ($scope.connectionisOnConsumer || $scope.connectionisOnProvider) {
+                return true
+            }
+            return false
+        }
+
+        $scope.providerMessages = function () {
+            if ($scope.connectionisOnProvider) {
+                return true
+            }
+            return false
+        }
+
+        $scope.consumerMessages = function () {
+            if ($scope.connectionisOnConsumer) {
+                return true
+            }
+            return false
+        }
+
+        $scope.playReceivedSong = function (path) {
+            console.log(path)
+            p.pause()
+            p.src('downloaded/' + path)
+            p.play()
+        }
+
         $scope.toggleRight = buildToggler('right')
 
         function buildToggler(navID) {
@@ -122,8 +189,7 @@ angular.module('plexusControllers').controller('mainCtrl', ['$scope', '$mdDialog
                 $mdSidenav(navID)
                     .toggle()
                     .then(function () {
-                        $scope.connectionisOn = sharedProperties.getConnection()
-                        console.log($scope.connectionisOn)
+                        $scope.connectionisOnProvider = sharedProperties.getConnection()
                     });
             }
         }

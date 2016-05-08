@@ -34,6 +34,11 @@ angular.module('plexusControllers').controller('createRoomCtrl', ['$scope', 'sha
             console.log('CONNECT')
 
             sharedProperties.setConnection(true)
+            sharedProperties.notifyProvider()
+            
+            
+            socket.emit('live', 'live')
+            
         })
 
         peerInitiator.on('data', function (data) {

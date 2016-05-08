@@ -1,4 +1,4 @@
-angular.module('plexusControllers').controller('joinRoomCtrl', ['$scope', function($scope) {
+angular.module('plexusControllers').controller('joinRoomCtrl', ['$scope', 'sharedProperties', function($scope, sharedProperties) {
 
     var roomName = ''
     var peer = new window.SimplePeer({
@@ -6,6 +6,8 @@ angular.module('plexusControllers').controller('joinRoomCtrl', ['$scope', functi
         trickle: false
     })
     var writeableStream = null
+
+    var lastReceivedSong = {}
 
     $scope.connectToPeerProgressLine = true
 
@@ -25,6 +27,11 @@ angular.module('plexusControllers').controller('joinRoomCtrl', ['$scope', functi
         var buffered = JSON.parse(chunk.toString())
 
         if (buffered.filename) {
+            lastReceivedSong = {}
+            lastReceivedSong.artist = buffered.artist
+            lastReceivedSong.song = buffered.title
+            lastReceivedSong.filename = buffered.filename
+            
             saveSongInfo(buffered)
             $scope.connectToPeerProgressLine = false
             saveSong(buffered.filename)
@@ -38,6 +45,8 @@ angular.module('plexusControllers').controller('joinRoomCtrl', ['$scope', functi
                 $scope.connectToPeerProgressLine = true
                 writeableStream.end()
                 console.log('file is downloaded. ')
+                sharedProperties.fileIsDownloaded(lastReceivedSong)
+                sharedProperties.notifyConsumer()
             }
         }
     })
@@ -55,7 +64,11 @@ angular.module('plexusControllers').controller('joinRoomCtrl', ['$scope', functi
             room: roomName,
             answer: sdp
         }
-        socket.emit('create or join', info)
+        
+        sharedProperties.setConnectionOnConsumer(true)
+        sharedProperties.notifyConsumer()
+        
+        socket.emit('create or join', info)        
     }
 
     function saveSong(songName) {
@@ -91,5 +104,9 @@ angular.module('plexusControllers').controller('joinRoomCtrl', ['$scope', functi
         }
         downloadedMusicDb.put(songInfo)
     }
+
+    socket.on('live', function(msg){
+        console.log('Connection is on! ' + msg)
+    })
 
 }])
